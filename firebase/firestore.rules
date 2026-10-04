@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dr. Fahreen Hannan — Firestore Security Rules
+//
+//  • Public visitors may READ only documents with  published == true.
+//  • Site-wide singletons (siteSettings, seoSettings, profiles) are public-read.
+//  • Only admins may WRITE. An admin is a signed-in user whose UID has a
+//    document at  /admins/{uid}  — created by hand in the Firebase Console.
+//  • /admins itself can never be written from the browser.
+//  • Everything not matched below is denied.
+// ─────────────────────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function validStatus(d) {
+      return d.status in ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'];
+    }
+
+    // published flag must agree with status
+    function validContent(d) {
+      return d.title is string
+        && d.title.size() > 0
+        && d.title.size() <= 300
+        && d.published is bool
+        && validStatus(d)
+        && d.published == (d.status == 'PUBLISHED');
+    }
+
+    // ── Admin registry ──────────────────────────────────────────────────────
+    match /admins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;   // lets the panel check "am I an admin?"
+      allow write: if false;                                   // manage ONLY in the Firebase Console
+    }
+
+    // ── Public singletons ───────────────────────────────────────────────────
+    match /siteSettings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /seoSettings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /profiles/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Content collections ────────────────────────────────────────────────
+    match /{collection}/{docId} {
+      allow read: if collection in [
+                    'experiences', 'awards', 'education', 'training', 'research',
+                    'activities', 'articles', 'media', 'videos', 'gallery',
+                    'testimonials', 'socialLinks'
+                  ]
+                  && (resource.data.published == true || isAdmin());
+
+      allow create, update: if collection in [
+                    'experiences', 'awards', 'education', 'training', 'research',
+                    'activities', 'articles', 'media', 'videos', 'gallery',
+                    'testimonials', 'socialLinks'
+                  ]
+                  && isAdmin()
+                  && validContent(request.resource.data);
+
+      allow delete: if collection in [
+                    'experiences', 'awards', 'education', 'training', 'research',
+                    'activities', 'articles', 'media', 'videos', 'gallery',
+                    'testimonials', 'socialLinks'
+                  ]
+                  && isAdmin();
+    }
+  }
+}

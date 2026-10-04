@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin-login.html
+
+# Replace with your live URL (see README → SEO)
+Sitemap: https://USERNAME.github.io/fahreen-portfolio/sitemap.xml

@@ -1,0 +1,26 @@
+{
+  "name": "Dr. Fahreen Hannan",
+  "short_name": "Dr. Fahreen",
+  "description": "Healthcare, business development & partnerships leader. International Business Lead, Grameen HealthTech Limited.",
+  "id": "./",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0C1E24",
+  "theme_color": "#0C1E24",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["health", "business", "medical"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Latest activities", "url": "./#activities", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Contact", "url": "./#contact", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

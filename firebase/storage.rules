@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dr. Fahreen Hannan — Cloud Storage Security Rules
+//
+//  • Files under /uploads are publicly readable (they are shown on the site).
+//  • Only admins (UID present in Firestore /admins/{uid}) may upload or delete.
+//  • Uploads are limited by type and size.
+//  • Everything else is denied.
+//
+// Cross-service rules (firestore.exists) require the Storage rules to be
+// deployed from the same Firebase project; the first deploy asks you to grant
+// Storage permission to read Firestore — accept it.
+// ─────────────────────────────────────────────────────────────────────────────
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    function allowedType() {
+      return request.resource.contentType.matches('image/.*')
+        || request.resource.contentType.matches('video/.*')
+        || request.resource.contentType == 'application/pdf';
+    }
+
+    function allowedSize() {
+      // 20 MB for images & PDFs, 300 MB for video
+      return (request.resource.contentType.matches('video/.*') && request.resource.size < 300 * 1024 * 1024)
+        || (!request.resource.contentType.matches('video/.*') && request.resource.size < 20 * 1024 * 1024);
+    }
+
+    match /uploads/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if isAdmin() && allowedType() && allowedSize();
+      allow delete: if isAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
